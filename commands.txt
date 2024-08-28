@@ -1,0 +1,15 @@
+docker run:
+docker run --gpus=all --rm -p8000:8000 -p8001:8001 -p8002:8002 -v /home/xavier/tritonPerformance/models:/tmp/models jetson_standard:02
+docker run -it -v /home/xavier/tritonPerformance/jetson_benchmarks:/jetson_benchmarks jetson_benchmark:01
+docker run -it -v /home/constantin/git_repos/tritonPerformance:/tritonPerformance -v /home/constantin/git_repos/tritonPerformance/models/:/tmp/models/ x64_dev_tritonperformance:01
+
+docker build:
+docker build -t jetson_standard:02 -f jetson_standard .
+docker build -t jetson_benchmark:01 -f jetson_benchmark .
+docker build -t x64_dev_tritonperformance:01 -f x64_dev_Dockerfile .
+
+newest:
+docker build -t jetson_benchmark:01 -f jetson_benchmark .
+nvidia-docker run -it --gpus=all -v /home/xavier/tritonPerformance/:/tritonPerformance -v /home/xavier/tritonPerformance/models/:/tmp/models/ jetson_benchmark:01
+
+ssh xavier@zis.phillip-rieger.de -p 2000

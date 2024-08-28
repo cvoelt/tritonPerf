@@ -1,0 +1,18 @@
+FROM hsydsregistry.azurecr.io/hdh/visual-inspection/triton-base:jetson
+
+RUN apt update
+RUN apt -y upgrade
+RUN apt install -y python3-pip
+RUN apt install -y python3-tk
+RUN pip3 install future-annotations==1.0.0
+RUN pip3 install pytorchcv==0.0.67
+RUN pip3 install torch==1.9.0
+RUN pip3 install matplotlib==2.1.1
+RUN pip3 install pandas==1.1.5
+RUN pip3 install jetson-stats==3.1.3
+RUN pip3 install pandavro==1.6.0
+RUN wget https://nvidia.box.com/shared/static/pmsqsiaw4pg9qrbeckcbymho6c01jj4z.whl -O onnxruntime_gpu-1.11.0-cp36-cp36m-linux_aarch64.whl
+RUN pip3 install onnxruntime_gpu-1.11.0-cp36-cp36m-linux_aarch64.whl
+
+# docker run --gpus=all -it -v /run/jtop.sock:/run/jtop.sock -v /home/xavier/tritonPerformance/:/tritonPerformance -v /home/xavier/tritonPerformance/models:/tmp/models tritonperf:latest
+# docker build -t tritonperf:latest -f dockerfile_tritonperf_jetpack_4_6 .

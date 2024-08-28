@@ -1,0 +1,33 @@
+FROM nvcr.io/nvidia/tritonserver:22.02-py3
+
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+RUN mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+RUN add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg curl libcurl4-openssl-dev libb64-dev libsm6 git sudo
+RUN pip install pandas==1.4.2
+RUN pip install matplotlib==3.5.1
+RUN pip install torch==1.11.0
+RUN pip install pytorchcv==0.0.67
+RUN pip install onnxruntime==1.11.1
+RUN pip install torchvision==0.12.0
+RUN pip install sklearn==0.0
+RUN pip install pandavro==1.6.0
+RUN cd /workspace
+RUN wget https://github.com/triton-inference-server/server/releases/download/v2.19.0/v2.19.0_ubuntu2004.clients.tar.gz
+RUN tar xzf v2.19.0_ubuntu2004.clients.tar.gz
+RUN mkdir -p /triton_server/clients/bin
+RUN ln -s /opt/tritonserver/bin/perf_analyzer /triton_server/clients/bin/perf_analyzer
+RUN ln -s /opt/tritonserver/backends /triton_server/
+
+
+RUN mkdir /tmp/models
+ADD models /tmp/models
+
+
+
+
+#docker build -t x64_dev_tritonperformance:latest -f x64_dev_Dockerfile .
+#docker run -it -v /home/constantin/git_repos/tritonPerformance:/tritonPerformance -v /home/constantin/git_repos/tritonPerformance/models/:/tmp/models/ x64_dev_tritonperformance:latest
+#inside dockercontainer run: /opt/tritonserver/bin/tritonserver --model-repository=/tmp/models --response-cache-byte-size=400000000 --strict-model-config=false

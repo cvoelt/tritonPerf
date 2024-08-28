@@ -1,0 +1,80 @@
+FROM nvcr.io/nvidia/l4t-cuda:11.4.14-runtime
+
+#general
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential
+ARG DEBIAN_FRONTEND=noninteractive
+
+#Triton Server Deps
+RUN     apt-get install -y --no-install-recommends \
+        libb64-0d \
+        libre2-5 \
+        libssl1.1 \
+        rapidjson-dev \
+        libopenblas-dev \
+        libarchive-dev \
+        zlib1g \
+        python3 \
+        python3-dev \
+        python3-pip
+
+#Triton Client Deps
+RUN apt-get update && \
+        apt-get install -y --no-install-recommends \
+        curl \
+        jq
+
+RUN pip3 install --upgrade wheel setuptools && \
+    pip3 install --upgrade grpcio-tools numpy attrdict pillow
+
+#Pytorch Deps
+RUN apt-get -y install autoconf \
+            bc \
+            g++-8 \
+            gcc-8 \
+            clang-8 \
+            lld-8
+
+RUN pip3 install --upgrade expecttest xmlrunner hypothesis aiohttp pyyaml scipy ninja typing_extensions protobuf scikit-learn
+
+#install Pytorch
+#recommended but did not work since it depends on cuda 10, using the second approach
+#RUN pip3 install --upgrade https://developer.download.nvidia.com/compute/redist/jp/v50/pytorch/torch-1.12.0a0+2c916ef.nv22.3-cp38-cp38-linux_aarch64.whl
+RUN pip3 install torch==1.11.0 torchvision==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
+
+#needed for PyTorch backend
+RUN LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/llvm-8/lib"
+
+# download Triton-Server and client
+RUN apt-get install -y --no-install-recommends wget
+RUN wget https://github.com/triton-inference-server/server/releases/download/v2.21.0/tritonserver2.21.0-jetpack5.0.tgz
+RUN mkdir /triton_server/
+RUN tar -xvzf tritonserver2.21.0-jetpack5.0.tgz -C /triton_server/
+RUN apt-get install -y --no-install-recommends software-properties-common
+
+#install TensorRT-library
+RUN apt-get install -y --no-install-recommends python3-libnvinfer-dev
+
+#install libcudnn
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/cross-linux-sbsa/cuda-ubuntu2004.pin
+RUN mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/cross-linux-sbsa//cuda-keyring_1.0-1_all.deb
+RUN dpkg -i cuda-keyring_1.0-1_all.deb
+RUN add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/cross-linux-sbsa/ /"
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends libcudnn8 \
+        libcudnn8-dev
+
+#tritonPerformance Deps
+RUN apt-get install -y --no-install-recommends python3-tk
+RUN pip3 install future-annotations==1.0.0
+RUN pip3 install pytorchcv==0.0.67
+RUN pip3 install matplotlib==3.5.2
+RUN pip3 install pandas==1.4.2
+RUN pip3 install jetson-stats==3.1.4
+RUN pip3 install pandavro==1.6.0
+RUN wget https://nvidia.box.com/shared/static/2sv2fv1wseihaw8ym0d4srz41dzljwxh.whl -O onnxruntime_gpu-1.11.0-cp38-cp38-linux_aarch64.whl
+RUN pip3 install onnxruntime_gpu-1.11.0-cp38-cp38-linux_aarch64.whl
+
+
+#docker build -t tritonperf:latest -f dockerfile_tritonperf_jetpack5_0 .
+#docker run --gpus=all -it -v /run/jtop.sock:/run/jtop.sock -v /home/tuxavier/tritonPerf/:/tritonPerf tritonperf:latest
